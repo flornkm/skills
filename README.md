@@ -14,3 +14,4 @@ npx skills@latest add flornkm/skills
 ## Reference
 
 - **[prefer-container-queries](./skills/prefer-container-queries/SKILL.md)**: Use Tailwind container queries instead of viewport breakpoints, so components respond to the space they are in.
+- **[webgl-components](./skills/webgl-components/SKILL.md)**: Ship shader-driven visuals (avatars, orbs, glass) inside a real UI without wrecking performance, accessibility, or the fallback path.
