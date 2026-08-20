@@ -1,5 +1,5 @@
 ---
-name: webgl-ui-widgets
+name: webgl-components
 description: "Build small, always-on WebGL visuals (identity avatars, ambient orbs, glass and iridescent surfaces, animated textures) that ship inside a normal web app UI without wrecking performance, accessibility, SSR, or layout. Use whenever a shader-, GLSL-, or canvas-driven decorative element is added to a product UI, especially one rendered many times per page or per list; when reviewing or optimizing one; or when debugging one that renders blurry, aliased, all-black, or paints over the surrounding UI on machines without hardware acceleration."
 ---
 
@@ -114,5 +114,17 @@ Optimizing the shader first is what earns the sharper rendering. Decide the cap 
 ## Verifying without eyeballs
 
 - Shader logic is plain math, so **port it to NumPy or PIL and assert on statistics**: mean luminance, percentile spread, and local-gradient detail metrics per variant. This catches "all variants render near-black" or "contrast collapsed" without opening a browser.
-- **Test the no-GPU path for real**, not by assumption: launch Chrome with `--disable-gpu` (a throwaway `--user-data-dir` keeps it out of the normal profile) and confirm the strict context request returns `null` and every widget shows its fallback, correctly clipped. The GUI equivalent is Settings → System → "Use graphics acceleration when available" off, plus a restart — which is exactly the state the affected users are in. A tiny probe page calling `getContext("webgl", { failIfMajorPerformanceCaveat: true })` with your exact context options settles "which branch does this machine take" in seconds; don't reason it out from documentation.
+- **Settle which branch a machine takes by measuring, not by reasoning from documentation.** [`scripts/gpu-probe.html`](scripts/gpu-probe.html) answers it directly: the strict-context result, whether WebGL exists at all, the live context cap, and the blit orientation. Edit `CONTEXT_OPTIONS` at the top of the file to match your component's real options first, because the answer only transfers if the options match. Serve it and read the JSON:
+
+```bash
+python3 -m http.server 8000 --directory scripts
+```
+
+- **Test the no-GPU path for real**, not by assumption. Point a GPU-less Chrome at the probe, then at your own app; a throwaway `--user-data-dir` keeps it out of the normal profile:
+
+```bash
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --disable-gpu --user-data-dir=/tmp/nogpu-profile http://localhost:8000/gpu-probe.html
+```
+
+  Expect the probe to report `FALLBACK`, then confirm every widget in your app shows its fallback, correctly clipped and painting nothing outside its frame. Note the two no-GPU states differ: `--disable-gpu` removes WebGL entirely, while the GUI toggle (Settings → System → "Use graphics acceleration when available", off, then restart) usually leaves a software rasterizer that the strict context refuses anyway. Both land on the fallback branch, and the GUI toggle is the exact state the affected users are in.
 - The browser checklist: a list of fifty instances scrolls at 60fps, tab-hidden CPU sits near zero, reduced motion shows a still frame, forced context loss flips to the fallback, `--disable-gpu` shows only fallbacks with nothing painting outside its frame, and a production build serves the page.
