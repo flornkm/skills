@@ -3,7 +3,7 @@ name: webgl-components
 description: "Build small, always-on WebGL visuals (identity avatars, ambient orbs, glass and iridescent surfaces, animated textures) that ship inside a normal web app UI without wrecking performance, accessibility, SSR, or layout. Use whenever a shader-, GLSL-, or canvas-driven decorative element is added to a product UI, especially one rendered many times per page or per list; when reviewing or optimizing one; or when debugging one that renders blurry, aliased, all-black, or paints over the surrounding UI on machines without hardware acceleration."
 ---
 
-# WebGL UI Widgets
+# WebGL Components
 
 Lessons for embedding shader-driven visuals (identity avatars, ambient orbs, animated textures) into product UI. The failure modes are predictable, and nearly all of them come from treating the widget like a demo instead of like a component that renders fifty times in a list.
 

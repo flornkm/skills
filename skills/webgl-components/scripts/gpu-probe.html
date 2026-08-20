@@ -35,6 +35,15 @@ function makeCanvas(size = 8) {
   return c;
 }
 
+// Hand a context back explicitly instead of waiting for GC, so the probe does not
+// leave the page sitting at the context cap after it reports.
+function releaseContext(gl) {
+  try {
+    const ext = gl && !gl.isContextLost() && gl.getExtension("WEBGL_lose_context");
+    if (ext) ext.loseContext();
+  } catch (_) { /* releasing is best-effort; never fail the probe over it */ }
+}
+
 // 1. THE BRANCH DECIDER ------------------------------------------------------
 // This is the single question the probe exists to answer. A null here means every
 // widget on this machine renders its DOM fallback, no matter how good the shader is.
@@ -42,6 +51,7 @@ try {
   const strict = makeCanvas().getContext("webgl", CONTEXT_OPTIONS);
   results.strictContext = strict ? "granted" : "null";
   results.branch = strict ? "webgl" : "fallback";
+  releaseContext(strict);
 } catch (err) {
   results.strictContext = "threw: " + err.message;
   results.branch = "fallback";
@@ -73,13 +83,45 @@ try {
   if (results.permissiveContext === "null") {
     notes.push("No WebGL context at all, strict or not.");
   }
+  releaseContext(loose);
 } catch (err) {
   results.permissiveContext = "threw: " + err.message;
 }
 
-// 3. Live context cap --------------------------------------------------------
+// 3. Blit orientation --------------------------------------------------------
+// Confirms the shared-canvas blit offset: GL's origin is bottom-left, the 2D
+// canvas' is top-left, so a region drawn at GL y=0 is read back at height - size.
+// This runs BEFORE the context-cap test on purpose — that test deliberately
+// exhausts the context pool, and anything needing a live context after it may be
+// handed an evicted one.
+try {
+  const src = makeCanvas(4);
+  const gl = src.getContext("webgl");
+  if (!gl) {
+    results.glOriginIsBottomLeft = "skipped (no context)";
+  } else {
+    gl.enable(gl.SCISSOR_TEST);
+    gl.scissor(0, 0, 4, 2);           // fill GL rows y = 0..2
+    gl.clearColor(1, 0, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    const dst = makeCanvas(4).getContext("2d");
+    dst.drawImage(src, 0, 0);
+    const isRed = (y) => dst.getImageData(0, y, 1, 1).data[0] === 255;
+    const top = isRed(0), bottom = isRed(3);
+    results.glOriginIsBottomLeft = bottom && !top;
+    if (results.glOriginIsBottomLeft !== true) {
+      notes.push("Blit orientation did not match the documented bottom-left origin. Re-derive the source offset before trusting canvas.height - size.");
+    }
+    releaseContext(gl);
+  }
+} catch (err) {
+  results.glOriginIsBottomLeft = "threw: " + err.message;
+}
+
+// 4. Live context cap --------------------------------------------------------
 // Demonstrates why one context per component instance does not work: the browser
-// keeps handing out contexts while silently killing the oldest ones.
+// keeps handing out contexts while silently killing the oldest ones. Destructive
+// by design, so it runs last, and everything it takes is released afterwards.
 try {
   const held = [];
   for (let i = 0; i < 40; i++) {
@@ -93,32 +135,9 @@ try {
   if (held.length > alive) {
     notes.push(`Requested ${held.length} contexts, only ${alive} survived, and getContext never returned null while evicting. A per-instance context silently loses its GPU out from under it.`);
   }
+  held.forEach(releaseContext);
 } catch (err) {
   results.contextCap = "threw: " + err.message;
-}
-
-// 4. Blit orientation --------------------------------------------------------
-// Confirms the shared-canvas blit offset: GL's origin is bottom-left, the 2D
-// canvas' is top-left, so a region drawn at GL y=0 is read back at height - size.
-try {
-  const src = makeCanvas(4);
-  const gl = src.getContext("webgl");
-  if (gl) {
-    gl.enable(gl.SCISSOR_TEST);
-    gl.scissor(0, 0, 4, 2);           // fill GL rows y = 0..2
-    gl.clearColor(1, 0, 0, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    const dst = makeCanvas(4).getContext("2d");
-    dst.drawImage(src, 0, 0);
-    const isRed = (y) => dst.getImageData(0, y, 1, 1).data[0] === 255;
-    const top = isRed(0), bottom = isRed(3);
-    results.glOriginIsBottomLeft = bottom && !top;
-    if (!results.glOriginIsBottomLeft) {
-      notes.push("Blit orientation did not match the documented bottom-left origin. Re-derive the source offset before trusting canvas.height - size.");
-    }
-  }
-} catch (err) {
-  results.blitOrientation = "threw: " + err.message;
 }
 
 results.notes = notes;
