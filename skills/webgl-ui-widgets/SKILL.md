@@ -93,8 +93,8 @@ Optimizing the shader first is what earns the sharper rendering. Decide the cap 
 
 ## React and SSR integration
 
-- The component file needs `"use client"`. Without it, dev often works while the **production** server render fails with an opaque digest error, because dev and prod RSC behavior differ. Verify with a real production build, not the dev server.
-- No browser APIs (`window`, `document`, `matchMedia`) at module scope, only inside functions called after mount. Module scope runs during SSR import.
+- **Under React Server Components, the component file needs `"use client"`.** This is an RSC boundary marker rather than a React-wide requirement, so check which world you are in: it applies in the Next.js App Router and the other RSC setups (React Router's RSC mode, Waku, the Parcel and Vite RSC plugins), and is an inert directive in a plain SPA, the Next Pages Router, or Astro and Remix islands, where the only effect is a bundler warning about module-level directives. Where it does apply, omitting it often works in dev while the **production** server render fails with an opaque digest error, because dev and prod RSC behavior differ. Verify with a real production build, not the dev server.
+- **Any** server rendering, RSC or not, imports the module on the server. So no browser APIs (`window`, `document`, `matchMedia`) at module scope, only inside functions called after mount. This one bites in Astro, Remix, Gatsby and a Vite SSR build just as hard as in Next.
 - Spread object props into primitives for effect dependencies. An inline `source={{...}}` object re-registers the instance on every render when the effect depends on object identity.
 - Registration and teardown belong in one effect returning a cleanup. The imperative handle (pointer position, visibility) goes through refs rather than state, because pointer moves must not re-render React.
 
