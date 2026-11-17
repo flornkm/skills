@@ -1,0 +1,38 @@
+# Publishes every skill as its own zip (charts.zip, webgl-components.zip, …) on a rolling
+# "zips" release, so a site can link one skill at
+# https://github.com/flornkm/skills/releases/download/zips/<skill>.zip
+name: Skill zips
+
+on:
+  push:
+    branches: [main]
+    paths: ["skills/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  zips:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Zip each skill
+        run: |
+          mkdir -p dist
+          cd skills
+          for dir in */; do
+            name="${dir%/}"
+            zip -qr "../dist/${name}.zip" "$name"
+          done
+
+      - name: Upload to the zips release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view zips >/dev/null 2>&1 || gh release create zips \
+            --title "Skill zips" \
+            --notes "One zip per skill, rebuilt on every push to main." \
+            --latest=false
+          gh release upload zips dist/*.zip --clobber
