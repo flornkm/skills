@@ -4,7 +4,7 @@ Labels are what break first. A chart that looks right at 1040px usually has crus
 
 ## The widths
 
-Lay out and check every chart at **260, 320, 390, 768 and 1040px** of container width (not viewport). 260 is a card in a narrow column or a phone with padding; if it works there, it works.
+Lay out and check every chart at **260, 320, 390, 768 and 1040px** of chart width (not viewport), plus the narrowest width the chart really gets: a 260px card with 16px padding leaves 228px. If it works there, it works.
 
 ## Measure, don't guess
 
@@ -41,7 +41,7 @@ const xLabels = fitAxis({
 
 - **Edges:** a label that would cross the plot edge is anchored to it (`text-anchor="start"` on the first, `"end"` on the last) instead of hanging off or being clipped. `fitLabels` does this.
 - **Markers win:** "Today", the current value, a forecast end. Pass them as `reserved` spans so ordinary ticks around them step aside.
-- **The last label:** `fitLabels` adds the final tick back after thinning only if it still keeps the gap.
+- **The last label:** thinning keeps the spacing even and may drop the final tick. If the latest value matters, pass it as a reserved marker and draw it yourself.
 - **Context the short format drops:** if "4, 11, 18" loses the month, name the month once (in the title, the first label, or the tooltip), not on every tick.
 - **Unevenly spaced data:** decide whether x is time (proportional gaps) or sequence (even spacing) and say so in the tooltip; don't silently squash gaps.
 
@@ -72,6 +72,7 @@ const names = inline
 - Reserve the gutter from the measured names **before** building the x scale.
 - `spread` keeps their order, keeps them `LABEL_PITCH` (16px for 11px text) apart, which is what `labelProblems` needs, and inside the plot.
 - **A series that ends early** (this year stops at today, last year runs to December): its name goes beside its own last point, inside the plot, with a halo, and joins the `spread` with the others. If the primary series has a forecast, the name goes at the forecast's end instead.
+- **Series names have formats too:** give each series a long and a short name ("Referrals from existing customers" → "Referrals") and measure with the short one when the long one doesn't fit.
 - If names don't fit inline, render a legend row under the chart (HTML, wraps naturally) with the same swatch the tooltip uses. **Reserve its height** as part of the chart's height whenever a legend is possible, so switching between names and legend never shifts the page.
 - Name text follows the palette's text rule: the series colour only when it reaches 4.5:1, otherwise `--chart-text` with a swatch.
 
@@ -134,5 +135,9 @@ for (const width of [260, 320, 390, 768, 1040]) {
   });
 }
 ```
+
+Lay out the legend row in the geometry as well (positions for each swatch and name, wrapping by measured width), so the test covers it even though it renders as HTML.
+
+Server rendering and `bun`/`node` tests have no canvas, so `textWidth` uses its cautious fallback there. Tests then check the tightest layout, which is what you want. If you need exact widths in tests, pass a measurer built on a font file (for example with `opentype.js`) through the layout's options.
 
 Use realistic data, including the longest labels you expect (large numbers, long series names) and the edge cases: one point, all zeros, a single huge outlier, missing values. Then screenshot the real component at 320 and 1040, in light and dark, and look.

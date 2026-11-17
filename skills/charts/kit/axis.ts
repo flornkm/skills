@@ -56,14 +56,12 @@ function layoutLabels<T>({
     return { value, x: px, label, width, anchor: anchorInside(px, width, left, right) };
   });
   const free = all.filter((l) => !reserved.some((r) => collides(spanOf(l), r, gap)));
-  const last = free[free.length - 1];
   for (let stride = Math.max(1, Math.ceil(free.length / maxLabels)); stride <= free.length; stride++) {
     const picked = free.filter((_, i) => i % stride === 0);
     const fits = picked.every((l, i) => i === 0 || !collides(spanOf(picked[i - 1]), spanOf(l), gap));
     if (!fits) continue;
-    // Thinning can drop the final value; it comes back only if it still keeps the gap.
-    const end = picked[picked.length - 1];
-    if (end !== last && !collides(spanOf(end), spanOf(last), gap)) picked.push(last);
+    // The final value is not added back after thinning: an uneven last gap reads as a glitch.
+    // If it matters (today, the latest week), pass it as a reserved marker and draw it yourself.
     return { labels: picked, stride };
   }
   return { labels: free.slice(0, 1), stride: Number.POSITIVE_INFINITY };

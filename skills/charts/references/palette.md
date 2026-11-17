@@ -83,3 +83,10 @@ Run these on every palette, in both themes:
 3. **Greyscale:** a screenshot in greyscale still shows which series is primary.
 
 If two colours only differ by hue, change their lightness.
+
+## When the brand isn't enough
+
+- **One hue:** use it in two or three lightness steps, then the brand's text greys for the rest. Named grey series are fine when every series matters to the question; "Other" is for categories nobody asked about.
+- **Brand colours that fail the checks:** keep the hue and change the lightness until it passes (a pale tint used for a mark gets darker; a red used for text gets deeper). Note the adjusted value next to the token so the brand team sees it.
+- **No dark tokens:** derive them the same way, raising lightness and keeping hue and chroma, and mark them as derived. Don't ship dark mode unverified: screenshot it.
+- **More series than hues:** reconsider the chart first (small multiples, or highlight one series and grey the rest).

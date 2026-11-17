@@ -6,6 +6,7 @@ Pick from the question the chart answers.
 | --- | --- |
 | How does it change over time? Will it cross a limit? | Line |
 | How much per period, and what is it made of? | Stacked bar |
+| What is it made of, and did the total reach a goal? | Stacked bar with a goal line |
 | What share does each part take of one total? | Donut (or a single stacked bar) |
 | Does one thing depend on another? | Scatter |
 | When does it happen? (hour × day, week × month) | Heatmap |
@@ -31,6 +32,9 @@ If a table would answer it better, use a table.
 - Round the top corners of the top segment and the bottom corners of the bottom one; clamp the radius so thin segments still close.
 - Name the series beside the last bar, level with their own segment.
 - Bars start at zero, always.
+- **A goal on the total:** one line in the target colour across the plot, labelled once, and a small ring plus a note where the total first crosses it ("2,000 a week, first hit Sep 14"). Include the goal in the domain.
+- **Which parts are growing:** put the change next to each series name ("Referrals +160%") rather than adding a second chart.
+- **A missing segment** (an outage, not a zero): stack the series that has gaps on top, leave its segment out, mark the top of that bar with a short dashed cap, write "Not tracked" above it when there's room, and show the total as "1,150+" in the tooltip. Never draw it as zero.
 
 ## Donut
 

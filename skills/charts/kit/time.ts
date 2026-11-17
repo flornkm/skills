@@ -11,11 +11,11 @@ const monthDay = formatter({ month: "short", day: "numeric" });
 const dayOnly = formatter({ day: "numeric" });
 const monthOnly = formatter({ month: "short" });
 
-// Longest to shortest, for fitAxis: it falls back to the next one when labels run out of room.
-export const DAY_FORMATS = [
-  (time: number) => monthDay.format(time),
-  (time: number) => dayOnly.format(time),
-] as const;
+// For fitAxis. Day-only ("6 20 3") loses the month, so days stay "Jul 6" and get thinned
+// instead. If you need the compact form, write one that names the month on the first label and
+// wherever it changes, and pass it as a second format.
+export const DAY_FORMATS = [(time: number) => monthDay.format(time)] as const;
+export const dayOfMonth = (time: number) => dayOnly.format(time);
 
 // No single-letter fallback: "J J A" is ambiguous. Thin months instead.
 export const MONTH_FORMATS = [(time: number) => monthOnly.format(time)] as const;

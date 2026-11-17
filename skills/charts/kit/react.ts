@@ -22,9 +22,14 @@ const STEP_KEYS: Record<string, number> = { ArrowLeft: -1, ArrowDown: -1, ArrowR
 export function useScrub({
   count,
   pick,
+  label,
+  valueText,
 }: {
   count: number;
   pick: (x: number, y: number) => number | null;
+  // What the chart shows, and what the focused position says out loud ("Sep 14: 2,071 sign-ups").
+  label: string;
+  valueText: (index: number) => string;
 }) {
   const [active, setActive] = useState(count - 1);
   const [visible, setVisible] = useState(false);
@@ -63,6 +68,8 @@ export function useScrub({
       "aria-valuemin": 0,
       "aria-valuemax": count - 1,
       "aria-valuenow": index,
+      "aria-valuetext": valueText(index),
+      "aria-label": label,
       onPointerMove: onPointer,
       onPointerDown: onPointer,
       onPointerLeave: () => setVisible(false),

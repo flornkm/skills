@@ -8,7 +8,7 @@ A chart is a row of positions (days, bars, dots). The pointer picks the nearest 
 - **Scatter:** the nearest dot within ~28px counts. Nothing nearby, no tooltip.
 - **Donut:** the angle under the pointer picks the slice, anywhere in the ring.
 - **Touch:** the same, with a finger drag. Don't block page scroll on a vertical swipe.
-- **Keyboard:** the chart has `tabIndex={0}` and a label. Left/right arrows (and up/down for a scatter, in reading order) move between positions. Keyboard focus opens the tooltip; a mouse click that focuses the chart does not. Escape closes it.
+- **Keyboard:** the chart has `tabIndex={0}`, a label, and an `aria-valuetext` for the focused position (`useScrub` takes `label` and `valueText`), so a screen reader hears "Sep 14: 2,071 sign-ups", not "10". Left/right arrows (and up/down for a scatter, in reading order) move between positions. Keyboard focus opens the tooltip; a mouse click that focuses the chart does not. Escape closes it.
 
 Hover marks glide with inline transitions (about 180ms ease-out; just a 150ms opacity fade with reduced motion), so they move the same whatever CSS the host project generates.
 
@@ -22,7 +22,7 @@ Hover marks glide with inline transitions (about 180ms ease-out; just a 150ms op
 
 ## Highlighting
 
-Picking out a series dims every other mark to about 15% opacity. Don't brighten, thicken or animate the picked one.
+Picking out a series dims every other mark to about 15% opacity. While scrubbing bars, dim the other bars less (about 45%) so the chart stays readable. Don't brighten, thicken or animate the picked one.
 
 In a donut with a list underneath, hovering a slice lights its row and vice versa. A divider between rows disappears when either neighbour is lit, so the lit row reads as one soft shape.
 
