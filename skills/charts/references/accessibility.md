@@ -24,7 +24,7 @@ Stepping through points one by one is slow. Render the same rows as a real table
 />
 ```
 
-- Hidden by default (visually hidden, not `display: none`), so screen readers find it right after the chart.
+- Hidden by default (visually hidden, not `display: none`), so screen readers find it right after the chart. Hide a wrapping `div`, never the `<table>` itself: tables ignore the 1px height of `sr-only` and hang below the page, adding empty scroll past the footer.
 - For data-heavy products, offer it to everyone with a "View as table" toggle (`visible`).
 - Values are formatted the way the tooltip formats them. Missing stays "Not tracked", never 0.
 

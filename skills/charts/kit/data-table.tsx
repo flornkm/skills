@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 
 // Hidden from sight but read by screen readers. Not `display: none`, which hides it from both.
+// Applied to a wrapping div: a <table> ignores the 1px height and would hang below the page.
 const VISUALLY_HIDDEN: CSSProperties = {
   position: "absolute",
   width: 1,
@@ -38,7 +39,8 @@ export function ChartDataTable<Row>({
   className?: string;
 }) {
   return (
-    <table style={visible ? undefined : VISUALLY_HIDDEN} className={className}>
+    <div style={visible ? undefined : VISUALLY_HIDDEN}>
+    <table className={className}>
       <caption>{caption}</caption>
       <thead>
         <tr>
@@ -65,5 +67,6 @@ export function ChartDataTable<Row>({
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
