@@ -13,19 +13,19 @@ Build charts as plain SVG in React, drawn at the container's real pixel width, w
 
 1. **Say what the chart is for in one sentence.** "Are we going over budget this month?" That picks the chart type, the one series that matters, and the annotation. See [chart types](references/chart-types.md).
 2. **Copy the kit** from [`kit/`](kit) into the project (e.g. `components/charts/core/`). It has no dependencies besides React:
-   - `scale.ts`: linear scales, round ticks, gridline count from height
+   - `scale.ts`: linear and band scales, round ticks, gridline count from height
    - `text.ts`: label widths measured with the canvas
    - `axis.ts`: `fitAxis` / `fitLabels`, which pick formats and thin labels so they never collide, and anchor edge labels inward
    - `labels.ts`: `spread` for end labels, `keepByPriority` for thresholds, `labelProblems` for tests
-   - `path.ts`: line, area, and a monotone curve that never overshoots
-   - `time.ts`: UTC calendar days and long-to-short formats
+   - `path.ts`: line, area, a monotone curve that never overshoots, `runs` to split at gaps, `barPath` for rounded bars
+   - `time.ts`: UTC calendar days and long-to-short date, number and currency formats
    - `react.ts`: `useWidth`, `useScrub` (pointer, touch, keyboard) and `placeTooltip`
 3. **Split every chart into three parts** ([architecture](references/architecture.md)):
    - `geometry.ts`: a pure `layout({ data, width, height })` that returns every position in pixels. Labels claim their space first, the plot gets the rest.
    - `chart.tsx`: measures the width, reserves the height, renders exactly what the layout returned, and puts an HTML tooltip on top.
    - `geometry.test.ts`: runs the layout at 260, 320, 390, 768 and 1040px and asserts `labelProblems(...)` is empty.
 4. **Handle narrow widths in this order:** shorter formats, fewer labels, fewer gridlines, labels inside the plot, drop secondary text, names into a legend row, less data. Never rotate labels, never scale a `viewBox`, never go below 11px. Details in [responsive labels](references/responsive-labels.md).
-5. **Apply the design rules** below, the [palette](references/palette.md) and [interaction and motion](references/interaction.md).
+5. **Take colours, type and surfaces from the project's brand** (its tokens, theme or design system), mapped onto the chart variables in the [palette](references/palette.md). Then apply the design rules below and [interaction and motion](references/interaction.md).
 6. **Verify:** the layout tests pass, then screenshot the real component at 320 and 1040px, in light and dark, and go through the checklist.
 
 ## Design rules
@@ -46,7 +46,7 @@ Build charts as plain SVG in React, drawn at the container's real pixel width, w
 - **Check every palette** for colour blindness, contrast and both themes.
 
 ### Labels and ink
-- **Name series where they end,** in their colour. A legend is the fallback when names don't fit.
+- **Name series where they end,** in their colour when it's readable (4.5:1), otherwise in the text colour with a swatch. A legend is the fallback when names don't fit.
 - **Values sit on their gridline inside the plot,** with a halo.
 - **Round ticks** (1, 2, 5 × 10ⁿ) and labels for people: `$400`, `10M`, `Nov 4`.
 - **Annotate the point of the chart on the chart:** "Over budget Nov 26".

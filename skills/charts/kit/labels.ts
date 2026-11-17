@@ -1,8 +1,12 @@
+// The vertical pitch two 11px labels need to pass labelProblems: their box (1.2em) plus its 2px
+// pad. Use fontSize * 1.2 + 2 for other sizes.
+export const LABEL_PITCH = Math.ceil(11 * 1.2 + 2);
+
 // Nudges labels apart vertically so none sit closer than `gap`, keeping their order and staying
 // between `min` and `max`. Used for series names at the end of lines and stacked bars.
 export function spread<T extends { y: number }>(
   items: readonly T[],
-  gap = 14,
+  gap = LABEL_PITCH,
   min = -Infinity,
   max = Infinity,
 ): T[] {

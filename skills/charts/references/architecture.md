@@ -25,7 +25,7 @@ return (
 ```
 
 - Draw at the measured pixel width. **Never scale a fixed `viewBox` to fit**: text and strokes shrink with it and an 11px label becomes 7px on a phone.
-- The height is fixed per chart (or a function of width, like `Math.min(260, width * 0.6)`), and the box reserves it before the first measure, so nothing shifts on load or hydration.
+- The height is fixed per chart (or a function of width, like `Math.min(260, width * 0.6)`), and the box reserves it before the first measure, so nothing shifts on load or hydration. If the layout may swap end labels for a legend row, the reserved height includes that row.
 - The server renders the empty box. That's the honest answer: the server doesn't know the width.
 
 ## 2. Lay out
@@ -53,7 +53,12 @@ export function layoutLine({ points, series, width, height }: Input) {
     bottom: height - 22,
   };
 
-  const max = Math.max(...points.flatMap((p) => series.map((s) => p.values[s.key] ?? 0)), 1);
+  // The domain covers the data and every reference line (a goal above the data must show).
+  const max = Math.max(
+    ...points.flatMap((p) => series.map((s) => p.values[s.key] ?? 0)),
+    limit?.value ?? 0,
+    1,
+  );
   const { top, ticks } = axisTicks(max, tickCountFor(plot.bottom - plot.top));
   const x = scaleLinear([times[0], times[times.length - 1]], [plot.left, plot.right]);
   const y = scaleLinear([0, top], [plot.bottom, plot.top]);

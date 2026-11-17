@@ -28,7 +28,7 @@ In a donut with a list underneath, hovering a slice lights its row and vice vers
 
 ## The entrance
 
-One shared entrance for every chart on the page:
+One shared entrance for every chart on the page. The snippet uses `motion` (`motion/react`) if the project has it; without it, use CSS transitions or the Web Animations API triggered by an `IntersectionObserver`, with the same easing and timing:
 
 ```js
 export const EASE_OUT = [0.22, 1, 0.36, 1];

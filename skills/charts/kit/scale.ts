@@ -13,6 +13,23 @@ export function scaleLinear(
   return scale;
 }
 
+export type BandScale<T> = { (value: T): number; bandwidth: number; step: number };
+
+// Even slots for categories (bars, weeks, plans). `padding` is the share of each slot left empty
+// between bars.
+export function scaleBand<T>(
+  domain: readonly T[],
+  [r0, r1]: readonly [number, number],
+  padding = 0.3,
+): BandScale<T> {
+  const step = domain.length ? (r1 - r0) / domain.length : 0;
+  const index = new Map(domain.map((value, i) => [value, i]));
+  const scale = ((value: T) => r0 + (index.get(value) ?? 0) * step + (step * padding) / 2) as BandScale<T>;
+  scale.step = step;
+  scale.bandwidth = step * (1 - padding);
+  return scale;
+}
+
 // The smallest round step (1, 2, 5 × 10ⁿ) at least as big as `raw`, so an axis never gets more
 // gridlines than asked for. No 2.5: most chart data is counted, not measured.
 export function niceStep(raw: number) {

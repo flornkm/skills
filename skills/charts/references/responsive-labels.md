@@ -15,8 +15,8 @@ Lay out and check every chart at **260, 320, 390, 768 and 1040px** of container 
 
 ## When space runs out, in this order
 
-1. **Shorten the format.** `Nov 4` → `4`, `$1,200` → `$1.2K`, `November` → `Nov` → `N`. Add the year only when the data spans more than one. `fitAxis` tries the formats longest first.
-2. **Thin the labels.** Keep every nth, evenly, so the gaps stay regular. Never keep "all except a few".
+1. **Shorten the format.** `Nov 4` → `4`, `$1,200` → `$1.2K`, `November` → `Nov`. No single letters for months ("J J A" is ambiguous). Add the year only when the data spans more than one. `fitAxis` tries every format and keeps the one that needs the least thinning, preferring the longer one on a tie.
+2. **Thin the labels.** Keep every nth, evenly, so the gaps stay regular, and at most about eight per axis (`maxLabels`) even when more would fit. Never keep "all except a few". The final value comes back after thinning only if it still keeps the gap.
 3. **Fewer gridlines.** The count comes from the plot height (`tickCountFor`), not a constant.
 4. **Move labels inside the plot.** Y values sit on their gridline at the left edge with a halo, instead of a gutter of numbers.
 5. **Drop secondary text.** Notes, units in titles, the comparison series' name. The detail is still in the tooltip.
@@ -41,13 +41,14 @@ const xLabels = fitAxis({
 
 - **Edges:** a label that would cross the plot edge is anchored to it (`text-anchor="start"` on the first, `"end"` on the last) instead of hanging off or being clipped. `fitLabels` does this.
 - **Markers win:** "Today", the current value, a forecast end. Pass them as `reserved` spans so ordinary ticks around them step aside.
-- **The last label:** after thinning, only add the final tick back if it still keeps the gap.
+- **The last label:** `fitLabels` adds the final tick back after thinning only if it still keeps the gap.
+- **Context the short format drops:** if "4, 11, 18" loses the month, name the month once (in the title, the first label, or the tooltip), not on every tick.
 - **Unevenly spaced data:** decide whether x is time (proportional gaps) or sequence (even spacing) and say so in the tooltip; don't silently squash gaps.
 
 ## Y axis
 
 - Ticks are round numbers from `axisTicks`, at most as many as the height allows.
-- Labels sit on their gridline inside the plot (`y - 5`, `text-anchor="start"`), drawn after the marks with a halo, and the zero label is skipped. If marks fill the left edge (bars starting at zero), use a gutter instead, sized by the widest formatted tick plus 8px.
+- Labels sit just above their gridline inside the plot: `x={plot.left}`, `y={y(tick) - 9}`, `dy="0.32em"`, `text-anchor="start"`, so the 11px text box clears the line. They're drawn after the marks with a halo, and the zero label is skipped. If marks fill the left edge (bars starting at zero), use a gutter instead, sized by the widest formatted tick plus 8px.
 - **Thresholds and reference lines** (budgets, targets, healthy ranges) aren't round numbers. Collapse duplicates, then keep them by importance with `keepByPriority(items, 24)`, so the target beats the secondary bound when they're close.
 - **Band labels:** a label for a shaded range goes inside the band when it fits, above it when the band is shorter than the text.
 - **Domain:** include every reference line in the domain (a limit above the data must be visible), plus headroom. Guard zero ranges and non-finite values.
@@ -61,7 +62,7 @@ const plotRight = width - (inline ? nameWidth + 8 : 0);
 const names = inline
   ? spread(
       series.map((s) => ({ label: s.label, width: textWidth(s.label), y: y(lastValue(s)) })),
-      14,
+      LABEL_PITCH,
       plot.top,
       plot.bottom,
     )
@@ -69,14 +70,26 @@ const names = inline
 ```
 
 - Reserve the gutter from the measured names **before** building the x scale.
-- `spread` keeps their order, keeps them 14px apart and inside the plot.
-- If they don't fit inline, render a legend row under the chart (HTML, wraps naturally) with the same swatch the tooltip uses.
+- `spread` keeps their order, keeps them `LABEL_PITCH` (16px for 11px text) apart, which is what `labelProblems` needs, and inside the plot.
+- **A series that ends early** (this year stops at today, last year runs to December): its name goes beside its own last point, inside the plot, with a halo, and joins the `spread` with the others. If the primary series has a forecast, the name goes at the forecast's end instead.
+- If names don't fit inline, render a legend row under the chart (HTML, wraps naturally) with the same swatch the tooltip uses. **Reserve its height** as part of the chart's height whenever a legend is possible, so switching between names and legend never shifts the page.
+- Name text follows the palette's text rule: the series colour only when it reaches 4.5:1, otherwise `--chart-text` with a swatch.
+
+## Lines with more points than pixels
+
+A year of daily data at 260px is more than one point per pixel, and draws as a heavy zigzag. When `points / plotWidth > 0.5`, aggregate (weekly averages or sums, whichever the metric means), or keep a min/max band per pixel column with the line through the mean. Say the bucket in the tooltip ("Week of Mar 2").
+
+## Forecasts
+
+Start a forecast from the fitted value at the last real point (a least-squares line over the last 14–28 points), not from the last raw value, or a weekend dip becomes a visible drop at "today". Draw it dotted in the series colour, and mark where it crosses a target.
 
 ## Bars
 
 - Category labels: measure the widest. If it's wider than the band, try a shorter format, then thin, then switch to **horizontal bars**, where labels get their own column on the left. Don't rotate text.
 - Value labels inside a bar only if the measured text fits with 4px padding; above it if there's room; otherwise only in the tooltip.
 - Below about 4px per bar, aggregate (weeks instead of days) rather than drawing slivers.
+- **Segments thinner than the 2px gap:** draw a non-zero segment at least 2px tall (taken from the gap), so nothing that exists disappears; the tooltip carries the real value. A zero draws nothing.
+- Use `scaleBand` for the slots and `barPath` for rounded segments; round only the stack's outer corners.
 
 ## Donut and rings
 
@@ -105,7 +118,9 @@ const names = inline
 The layout is a pure function, so test it at every width. Collect a box for every label the layout returns and assert there are no problems:
 
 ```ts
-import { labelProblems, textBox } from "./core/labels";
+// line-chart/geometry.test.ts, next to geometry.ts; the kit lives in ../core/
+import { labelProblems, textBox } from "../core/labels";
+import { layoutLine } from "./geometry";
 
 for (const width of [260, 320, 390, 768, 1040]) {
   test(`labels fit at ${width}px`, () => {
