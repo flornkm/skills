@@ -70,6 +70,8 @@ export function useScrub({
       "aria-valuenow": index,
       "aria-valuetext": valueText(index),
       "aria-label": label,
+      // Announced as a chart you can step through, not as a slider that sets a value.
+      "aria-roledescription": "interactive chart",
       onPointerMove: onPointer,
       onPointerDown: onPointer,
       onPointerLeave: () => setVisible(false),

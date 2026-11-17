@@ -13,6 +13,6 @@ npx skills@latest add flornkm/skills
 
 ## Reference
 
-- **[charts](./skills/charts/SKILL.md)**: Build custom SVG charts that look designed, not library-default, and stay legible at every width: measured labels, responsive axes, a small dependency-free kit and layout tests.
+- **[charts](./skills/charts/SKILL.md)**: Build custom, accessible SVG charts with no library: designed rather than default, legible at every width, with measured labels, responsive axes, a small kit and layout tests.
 - **[prefer-container-queries](./skills/prefer-container-queries/SKILL.md)**: Use Tailwind container queries instead of viewport breakpoints, so components respond to the space they are in.
 - **[webgl-components](./skills/webgl-components/SKILL.md)**: Ship shader-driven visuals (avatars, orbs, glass) inside a real UI without wrecking performance, accessibility, or the fallback path.

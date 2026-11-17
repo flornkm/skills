@@ -1,6 +1,6 @@
 ---
 name: charts
-description: "Build custom SVG charts and dashboards in React that look designed, not library-default, and stay legible at every container width. Use whenever you build, restyle or review a chart, graph, sparkline, donut, heatmap, KPI card or dashboard; when a chart library can't do the design (unusual chart types, branded tooltips, custom labels); when axis labels, tick labels, series names or legends overlap, rotate, clip or get crushed on small screens; or when the user says a chart looks cheap, generic, busy or 'default'."
+description: "Build custom, accessible SVG charts and dashboards in React, with no chart library, that look designed rather than library-default and stay legible at every container width. Use whenever you build, restyle or review a chart, graph, sparkline, donut, heatmap, KPI card or dashboard; when a chart library can't do the design (unusual chart types, branded tooltips, custom labels); when axis labels, tick labels, series names or legends overlap, rotate, clip or get crushed on small screens; or when the user says a chart looks cheap, generic, busy or 'default'."
 ---
 
 # Charts
@@ -19,7 +19,8 @@ Build charts as plain SVG in React, drawn at the container's real pixel width, w
    - `labels.ts`: `spread` for end labels, `keepByPriority` for thresholds, `labelProblems` for tests
    - `path.ts`: line, area, a monotone curve that never overshoots, `runs` to split at gaps, `barPath` for rounded bars
    - `time.ts`: UTC calendar days and long-to-short date, number and currency formats
-   - `react.ts`: `useWidth`, `useScrub` (pointer, touch, keyboard) and `placeTooltip`
+   - `react.ts`: `useWidth`, `useScrub` (pointer, touch, keyboard, screen reader) and `placeTooltip`
+   - `data-table.tsx`: `ChartDataTable`, the whole dataset as a table for screen readers or a "View as table" toggle
 3. **Split every chart into three parts** ([architecture](references/architecture.md)):
    - `geometry.ts`: a pure `layout({ data, width, height })` that returns every position in pixels. Labels claim their space first, the plot gets the rest.
    - `chart.tsx`: measures the width, reserves the height, renders exactly what the layout returned, and puts an HTML tooltip on top.
@@ -61,7 +62,12 @@ Build charts as plain SVG in React, drawn at the container's real pixel width, w
 - **One shared entrance,** started when the chart is mostly on screen, once, following the data (lines draw left to right, donuts sweep clockwise). Reduced motion shows the final state.
 
 ### Accessibility
-- The SVG is `aria-hidden`; the wrapper has a label that states what the chart shows, and the key number is also in text.
+- **Text alternative:** the SVG is `aria-hidden`; the wrapper has the chart's name, and the point of the chart is also a sentence in text.
+- **The data as a table:** `ChartDataTable` renders every value, hidden visually or behind a "View as table" toggle.
+- **Keyboard:** one tab stop, arrow keys, Home/End, Escape, and a **visible focus ring** plus an active marker.
+- **Screen readers:** announced as an "interactive chart" with its name, and each position reads as a sentence.
+- **High contrast:** a `forced-colors` fallback (system colours, outlines, dashes) keeps series apart.
+- Details and the test steps in [accessibility](references/accessibility.md).
 
 ## Checklist
 
@@ -72,7 +78,9 @@ Build charts as plain SVG in React, drawn at the container's real pixel width, w
 - [ ] Three hues or fewer, colour-blind safe, working in light and dark.
 - [ ] Gaps and the future are empty, not zero; no curve overshoots; bars start at zero.
 - [ ] No legend box unless names don't fit inline.
-- [ ] Hover, touch and arrow keys show one tooltip that stays on screen.
+- [ ] Hover, touch and arrow keys show one tooltip that stays on screen; focus is visible.
+- [ ] A screen reader hears the chart's name, each position as a sentence, and finds the data table.
+- [ ] Series stay distinguishable in forced-colors mode; reduced motion skips the entrance.
 - [ ] Nothing in the chart is a library default nobody chose.
 
 ## Reference
@@ -82,3 +90,4 @@ Build charts as plain SVG in React, drawn at the container's real pixel width, w
 - [Chart types](references/chart-types.md): which chart for which question, and specifics per type.
 - [Palette](references/palette.md): the OKLCH ramp, theme tokens, sequential ramps and checks.
 - [Interaction and motion](references/interaction.md): scrubbing, tooltips, keyboard, the entrance.
+- [Accessibility](references/accessibility.md): text alternatives, the data table, focus, screen readers, high contrast, motion, touch.
